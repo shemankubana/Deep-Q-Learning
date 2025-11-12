@@ -172,7 +172,7 @@ def record_video(
     def make_env():
         env = gym.make(env_name, render_mode='rgb_array')
         env = gym.wrappers.RecordEpisodeStatistics(env)
-        env = gym.wrappers.AtariPreprocessing(env)
+        env = gym.wrappers.AtariPreprocessing(env, frame_skip=1)
         
         # Use FrameStackObservation (new name in gymnasium)
         try:
