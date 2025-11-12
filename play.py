@@ -160,11 +160,16 @@ def record_video(
         seed: Random seed
     """
     from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
-    
+    import os
+
     print(f"\n{'='*60}")
     print("RECORDING VIDEO")
     print(f"{'='*60}\n")
-    
+
+    # Create video directory if it doesn't exist
+    os.makedirs(video_folder, exist_ok=True)
+    print(f"Videos will be saved to: {os.path.abspath(video_folder)}\n")
+
     # Load model
     model = DQN.load(model_path)
     
@@ -188,21 +193,28 @@ def record_video(
         env,
         video_folder,
         record_video_trigger=lambda x: x == 0,
-        video_length=video_length,
-        name_prefix=f"dqn_{env_name}"
+        video_length=video_length if video_length > 0 else 100000,  # Long enough for full episode
+        name_prefix=f"dqn_{env_name.replace('/', '_')}"
     )
-    
+
     obs = env.reset()
-    
-    for _ in range(n_episodes * 1000):  # Play long enough to get n_episodes
+    episode_count = 0
+
+    print(f"Recording {n_episodes} episode(s)...")
+
+    while episode_count < n_episodes:
         action, _ = model.predict(obs, deterministic=True)  # type: ignore
         obs, _, dones, _ = env.step(action)
-        
+
         if dones[0]:
-            obs = env.reset()
-    
+            episode_count += 1
+            print(f"Episode {episode_count}/{n_episodes} recorded")
+            if episode_count < n_episodes:
+                obs = env.reset()
+
     env.close()
-    print(f"✓ Video saved to {video_folder}\n")
+    print(f"\n✓ Videos saved to {os.path.abspath(video_folder)}")
+    print(f"✓ Recorded {episode_count} episode(s)\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Play trained DQN agent')
