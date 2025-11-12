@@ -1,6 +1,8 @@
 gymnasium[atari]
 gymnasium[accept-rom-license]
+gymnasium[other]
 stable-baselines3
+moviepy
 ale-py
 torch
 torchvision
