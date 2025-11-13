@@ -19,19 +19,14 @@ gym.register_envs(ale_py)
 
 def create_atari_env(env_name, n_envs=4, seed=0):
     """
-    Create and wrap Atari environment with proper preprocessing
-    
-    Args:
-        env_name: Name of the Atari environment (e.g., 'BreakoutNoFrameskip-v4')
-        n_envs: Number of parallel environments
-        seed: Random seed
+    Create and wrap Atari environment with preprocessing
     """
     env = make_atari_env(env_name, n_envs=n_envs, seed=seed)
     env = VecFrameStack(env, n_stack=4)
     return env
 
 def train_dqn(
-    env_name='BreakoutNoFrameskip-v4',
+    env_name='AssaultNoFrameskip-v4',
     policy='CnnPolicy',
     total_timesteps=1_000_000,
     learning_rate=1e-4,
@@ -50,26 +45,7 @@ def train_dqn(
     experiment_name='dqn_atari'
 ):
     """
-    Train a DQN agent on an Atari environment
-    
-    Args:
-        env_name: Atari environment name
-        policy: Policy type ('CnnPolicy' or 'MlpPolicy')
-        total_timesteps: Total training timesteps
-        learning_rate: Learning rate
-        gamma: Discount factor
-        batch_size: Batch size for training
-        buffer_size: Replay buffer size
-        exploration_fraction: Fraction of training for exploration
-        exploration_initial_eps: Initial epsilon for exploration
-        exploration_final_eps: Final epsilon for exploration
-        target_update_interval: Target network update frequency
-        train_freq: Training frequency
-        gradient_steps: Gradient steps per update
-        seed: Random seed
-        save_path: Path to save model
-        log_path: Path for tensorboard logs
-        experiment_name: Name for this experiment
+    Train DQN agent on Assault
     """
     
     # Create directories
@@ -105,23 +81,21 @@ def train_dqn(
         name_prefix="dqn_checkpoint"
     )
     
-    # Print hyperparameters
+    # Print configuration
     print(f"\n{'='*60}")
-    print("HYPERPARAMETERS:")
+    print("TRAINING CONFIGURATION:")
     print(f"{'='*60}")
     print(f"Environment: {env_name}")
     print(f"Policy: {policy}")
     print(f"Total Timesteps: {total_timesteps:,}")
     print(f"Learning Rate: {learning_rate}")
-    print(f"Gamma: {gamma}")
+    print(f"Gamma (γ): {gamma}")
     print(f"Batch Size: {batch_size}")
     print(f"Buffer Size: {buffer_size:,}")
     print(f"Exploration Fraction: {exploration_fraction}")
-    print(f"Initial Epsilon: {exploration_initial_eps}")
-    print(f"Final Epsilon: {exploration_final_eps}")
+    print(f"Epsilon Start: {exploration_initial_eps}")
+    print(f"Epsilon End: {exploration_final_eps}")
     print(f"Target Update Interval: {target_update_interval}")
-    print(f"Train Frequency: {train_freq}")
-    print(f"Gradient Steps: {gradient_steps}")
     print(f"{'='*60}\n")
     
     # Create DQN model
@@ -164,9 +138,9 @@ def train_dqn(
     print(f"{'='*60}\n")
     model.save(save_path)
     
-    # Save as dqn_model.zip (required by assignment)
+    # Save as dqn_model.zip for assignment submission
     model.save("./dqn_model")
-    print("Model also saved as ./dqn_model.zip")
+    print("✓ Model saved as ./dqn_model.zip")
     
     env.close()
     eval_env.close()
@@ -175,7 +149,7 @@ def train_dqn(
 
 def run_experiment(experiment_num, **kwargs):
     """
-    Run a single experiment with specified hyperparameters
+    Run a single numbered experiment
     """
     experiment_name = f"experiment_{experiment_num:02d}"
     kwargs['experiment_name'] = experiment_name
@@ -194,8 +168,8 @@ def run_experiment(experiment_num, **kwargs):
     return model
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train DQN on Atari')
-    parser.add_argument('--env', type=str, default='BreakoutNoFrameskip-v4',
+    parser = argparse.ArgumentParser(description='Train DQN on Atari Assault')
+    parser.add_argument('--env', type=str, default='AssaultNoFrameskip-v4',
                        help='Atari environment name')
     parser.add_argument('--policy', type=str, default='CnnPolicy',
                        choices=['CnnPolicy', 'MlpPolicy'],
@@ -217,7 +191,7 @@ if __name__ == "__main__":
     parser.add_argument('--eps-end', type=float, default=0.01,
                        help='Final epsilon')
     parser.add_argument('--experiment', type=int, default=None,
-                       help='Experiment number')
+                       help='Experiment number (1-10)')
     parser.add_argument('--seed', type=int, default=0,
                        help='Random seed')
     

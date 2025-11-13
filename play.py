@@ -1,12 +1,10 @@
 """
-Deep Q-Learning Evaluation/Playing Script for Atari Environments
+Deep Q-Learning Evaluation Script for Atari Assault
 Formative 3 Assignment - ALU
 """
 
 import gymnasium as gym
 from stable_baselines3 import DQN
-from stable_baselines3.common.env_util import make_atari_env
-from stable_baselines3.common.vec_env import VecFrameStack
 import numpy as np
 import argparse
 import time
@@ -18,29 +16,22 @@ gym.register_envs(ale_py)
 def create_atari_env_single(env_name, seed=0, render_mode='human'):
     """
     Create single Atari environment for visualization
-    
-    Args:
-        env_name: Name of the Atari environment
-        seed: Random seed
-        render_mode: Rendering mode ('human' for GUI, 'rgb_array' for recording)
     """
-    # Create environment with rendering enabled
-    env = gym.make("ALE/Breakout-v5", render_mode=render_mode)
+    env = gym.make(env_name, render_mode=render_mode)
     env = gym.wrappers.RecordEpisodeStatistics(env)
     env = gym.wrappers.AtariPreprocessing(env, frame_skip=1)
     
-    # Use FrameStackObservation (new name in gymnasium)
+    # Frame stacking for temporal information
     try:
         env = gym.wrappers.FrameStackObservation(env, stack_size=4)
     except AttributeError:
-        # Fallback for older gymnasium versions
         env = gym.wrappers.FrameStack(env, num_stack=4)
     
     return env
 
 def play_game(
     model_path='./dqn_model.zip',
-    env_name='BreakoutNoFrameskip-v4',
+    env_name='ALE/Assault-v5',
     n_episodes=5,
     render=True,
     deterministic=True,
@@ -48,28 +39,20 @@ def play_game(
     delay=0.01
 ):
     """
-    Load trained DQN model and play Atari game
-    
-    Args:
-        model_path: Path to saved model
-        env_name: Atari environment name
-        n_episodes: Number of episodes to play
-        render: Whether to render the game
-        deterministic: Whether to use deterministic (greedy) policy
-        seed: Random seed
-        delay: Delay between frames (seconds)
+    Load trained DQN model and evaluate on Assault
+    Uses GreedyQPolicy (deterministic=True) for evaluation
     """
     
     print(f"\n{'='*60}")
     print("LOADING TRAINED MODEL")
     print(f"{'='*60}")
-    print(f"Model path: {model_path}")
+    print(f"Model: {model_path}")
     print(f"Environment: {env_name}")
-    print(f"Number of episodes: {n_episodes}")
-    print(f"Deterministic policy: {deterministic}")
+    print(f"Episodes: {n_episodes}")
+    print(f"Policy: {'Greedy (deterministic)' if deterministic else 'Stochastic'}")
     print(f"{'='*60}\n")
     
-    # Load the trained model
+    # Load trained model
     try:
         model = DQN.load(model_path)
         print("✓ Model loaded successfully!\n")
@@ -102,15 +85,15 @@ def play_game(
         print("-" * 40)
         
         while not (done or truncated):
-            # Use greedy policy (deterministic=True) for best performance
-            action, _states = model.predict(obs, deterministic=deterministic)  # type: ignore
+            # GreedyQPolicy: select action with highest Q-value
+            action, _states = model.predict(obs, deterministic=deterministic)
             obs, reward, done, truncated, info = env.step(action)
             
             episode_reward += reward
             episode_length += 1
             
             if render:
-                time.sleep(delay)  # Add small delay for visualization
+                time.sleep(delay)
         
         all_episode_rewards.append(episode_reward)
         all_episode_lengths.append(episode_length)
@@ -125,7 +108,7 @@ def play_game(
     print(f"\n{'='*60}")
     print("EVALUATION RESULTS")
     print(f"{'='*60}")
-    print(f"Episodes played: {n_episodes}")
+    print(f"Episodes: {n_episodes}")
     print(f"\nReward Statistics:")
     print(f"  Mean: {np.mean(all_episode_rewards):.2f}")
     print(f"  Std:  {np.std(all_episode_rewards):.2f}")
@@ -142,22 +125,14 @@ def play_game(
 
 def record_video(
     model_path='./dqn_model.zip',
-    env_name='BreakoutNoFrameskip-v4',
+    env_name='ALE/Assault-v5',
     n_episodes=3,
     video_folder='./videos',
-    video_length=0,  # 0 means record entire episode
+    video_length=0,
     seed=0
 ):
     """
-    Record video of trained agent playing
-    
-    Args:
-        model_path: Path to saved model
-        env_name: Atari environment name
-        n_episodes: Number of episodes to record
-        video_folder: Folder to save videos
-        video_length: Length of video in steps (0 for full episode)
-        seed: Random seed
+    Record video of trained agent playing Assault
     """
     from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv
     import os
@@ -166,7 +141,6 @@ def record_video(
     print("RECORDING VIDEO")
     print(f"{'='*60}\n")
 
-    # Create video directory if it doesn't exist
     os.makedirs(video_folder, exist_ok=True)
     print(f"Videos will be saved to: {os.path.abspath(video_folder)}\n")
 
@@ -179,11 +153,9 @@ def record_video(
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env = gym.wrappers.AtariPreprocessing(env, frame_skip=1)
         
-        # Use FrameStackObservation (new name in gymnasium)
         try:
             env = gym.wrappers.FrameStackObservation(env, stack_size=4)
         except AttributeError:
-            # Fallback for older gymnasium versions
             env = gym.wrappers.FrameStack(env, num_stack=4)
         
         return env
@@ -193,8 +165,8 @@ def record_video(
         env,
         video_folder,
         record_video_trigger=lambda x: x == 0,
-        video_length=video_length if video_length > 0 else 100000,  # Long enough for full episode
-        name_prefix=f"dqn_{env_name.replace('/', '_')}"
+        video_length=video_length if video_length > 0 else 100000,
+        name_prefix=f"dqn_assault"
     )
 
     obs = env.reset()
@@ -203,7 +175,7 @@ def record_video(
     print(f"Recording {n_episodes} episode(s)...")
 
     while episode_count < n_episodes:
-        action, _ = model.predict(obs, deterministic=True)  # type: ignore
+        action, _ = model.predict(obs, deterministic=True)
         obs, _, dones, _ = env.step(action)
 
         if dones[0]:
@@ -217,10 +189,10 @@ def record_video(
     print(f"✓ Recorded {episode_count} episode(s)\n")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Play trained DQN agent')
+    parser = argparse.ArgumentParser(description='Play trained DQN agent on Assault')
     parser.add_argument('--model-path', type=str, default='./dqn_model.zip',
                        help='Path to trained model')
-    parser.add_argument('--env', type=str, default='ALE/Breakout-v5',
+    parser.add_argument('--env', type=str, default='ALE/Assault-v5',
                        help='Atari environment name')
     parser.add_argument('--episodes', type=int, default=5,
                        help='Number of episodes to play')

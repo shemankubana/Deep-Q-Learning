@@ -1,6 +1,6 @@
 """
-Hyperparameter Experiment Runner
-Runs 10 different hyperparameter configurations for DQN training
+Hyperparameter Experiment Runner for Assault
+Runs 10 different configurations as required by assignment
 """
 
 import subprocess
@@ -8,7 +8,7 @@ import json
 import os
 from datetime import datetime
 
-# Define 10 different hyperparameter configurations to test
+# 10 hyperparameter configurations for experiments
 EXPERIMENTS = [
     {
         "id": 1,
@@ -21,7 +21,7 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.1
         },
-        "expected_behavior": "Standard DQN configuration - baseline performance"
+        "expected_behavior": "Standard DQN - baseline for comparison"
     },
     {
         "id": 2,
@@ -34,7 +34,7 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.1
         },
-        "expected_behavior": "Faster learning but potentially less stable"
+        "expected_behavior": "Faster learning, may be less stable"
     },
     {
         "id": 3,
@@ -51,7 +51,7 @@ EXPERIMENTS = [
     },
     {
         "id": 4,
-        "name": "High Discount Factor",
+        "name": "High Gamma",
         "params": {
             "lr": 1e-4,
             "gamma": 0.995,
@@ -60,11 +60,11 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.1
         },
-        "expected_behavior": "Values long-term rewards more, potentially better long-term strategy"
+        "expected_behavior": "Values long-term rewards, better strategy"
     },
     {
         "id": 5,
-        "name": "Low Discount Factor",
+        "name": "Low Gamma",
         "params": {
             "lr": 1e-4,
             "gamma": 0.95,
@@ -73,11 +73,11 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.1
         },
-        "expected_behavior": "Focuses on immediate rewards, may be myopic"
+        "expected_behavior": "Focuses on immediate rewards"
     },
     {
         "id": 6,
-        "name": "Large Batch Size",
+        "name": "Large Batch",
         "params": {
             "lr": 1e-4,
             "gamma": 0.99,
@@ -86,11 +86,11 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.1
         },
-        "expected_behavior": "More stable gradients but slower updates"
+        "expected_behavior": "More stable gradients"
     },
     {
         "id": 7,
-        "name": "Small Batch Size",
+        "name": "Small Batch",
         "params": {
             "lr": 1e-4,
             "gamma": 0.99,
@@ -99,7 +99,7 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.1
         },
-        "expected_behavior": "Noisier gradients but more frequent updates"
+        "expected_behavior": "Noisier but more frequent updates"
     },
     {
         "id": 8,
@@ -112,7 +112,7 @@ EXPERIMENTS = [
             "eps_end": 0.05,
             "exp_fraction": 0.2
         },
-        "expected_behavior": "More exploration, may find better strategies but slower convergence"
+        "expected_behavior": "More exploration, may find better strategies"
     },
     {
         "id": 9,
@@ -125,11 +125,11 @@ EXPERIMENTS = [
             "eps_end": 0.01,
             "exp_fraction": 0.05
         },
-        "expected_behavior": "Fast transition to exploitation, may miss optimal strategies"
+        "expected_behavior": "Fast convergence, may miss optimal strategies"
     },
     {
         "id": 10,
-        "name": "Aggressive Learning",
+        "name": "Aggressive",
         "params": {
             "lr": 1e-3,
             "gamma": 0.99,
@@ -138,13 +138,13 @@ EXPERIMENTS = [
             "eps_end": 0.02,
             "exp_fraction": 0.15
         },
-        "expected_behavior": "Very fast learning with larger batches for stability"
+        "expected_behavior": "Very fast learning with larger batches"
     }
 ]
 
-def run_experiment(exp_config, env_name='BreakoutNoFrameskip-v4', timesteps=500_000):
+def run_experiment(exp_config, env_name='AssaultNoFrameskip-v4', timesteps=500_000):
     """
-    Run a single experiment with given configuration
+    Run single experiment with specified configuration
     """
     exp_id = exp_config['id']
     params = exp_config['params']
@@ -152,7 +152,7 @@ def run_experiment(exp_config, env_name='BreakoutNoFrameskip-v4', timesteps=500_
     print(f"\n{'#'*80}")
     print(f"# EXPERIMENT {exp_id}: {exp_config['name']}")
     print(f"{'#'*80}")
-    print(f"Expected Behavior: {exp_config['expected_behavior']}")
+    print(f"Expected: {exp_config['expected_behavior']}")
     print(f"\nHyperparameters:")
     for key, value in params.items():
         print(f"  {key}: {value}")
@@ -183,11 +183,11 @@ def run_experiment(exp_config, env_name='BreakoutNoFrameskip-v4', timesteps=500_
 
 def generate_results_table():
     """
-    Generate a markdown table with all experiment configurations
+    Generate markdown table for README
     """
-    table = "# Hyperparameter Experiment Results\n\n"
-    table += "| Experiment | Name | lr | gamma | batch_size | eps_start | eps_end | exp_fraction | Expected Behavior |\n"
-    table += "|------------|------|-------|-------|------------|-----------|---------|--------------|-------------------|\n"
+    table = "## Hyperparameter Experiments\n\n"
+    table += "| Exp | Name | lr | γ | Batch | ε Start | ε End | Exp Frac | Expected Behavior |\n"
+    table += "|-----|------|-------|-------|-------|---------|---------|----------|-------------------|\n"
     
     for exp in EXPERIMENTS:
         p = exp['params']
@@ -197,22 +197,22 @@ def generate_results_table():
 
 def save_experiment_configs():
     """
-    Save experiment configurations to JSON file
+    Save configurations to JSON
     """
     with open('experiment_configs.json', 'w') as f:
         json.dump(EXPERIMENTS, f, indent=2)
-    print("✓ Experiment configurations saved to experiment_configs.json")
+    print("✓ Configurations saved to experiment_configs.json")
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Run hyperparameter experiments')
-    parser.add_argument('--env', type=str, default='BreakoutNoFrameskip-v4',
-                       help='Atari environment name')
+    parser = argparse.ArgumentParser(description='Run hyperparameter experiments on Assault')
+    parser.add_argument('--env', type=str, default='AssaultNoFrameskip-v4',
+                       help='Atari environment')
     parser.add_argument('--timesteps', type=int, default=500_000,
-                       help='Training timesteps per experiment (reduced for faster testing)')
+                       help='Training timesteps per experiment')
     parser.add_argument('--experiments', nargs='+', type=int,
-                       help='Specific experiment IDs to run (e.g., --experiments 1 2 3)')
+                       help='Specific experiments to run (e.g., --experiments 1 2 3)')
     parser.add_argument('--generate-table', action='store_true',
                        help='Generate results table and exit')
     
@@ -225,7 +225,6 @@ if __name__ == "__main__":
             f.write(table)
         print("\n✓ Table saved to experiment_results_template.md")
     else:
-        # Save configurations
         save_experiment_configs()
         
         # Determine which experiments to run
@@ -235,9 +234,9 @@ if __name__ == "__main__":
             experiments_to_run = EXPERIMENTS
         
         print(f"\n{'='*80}")
-        print(f"Running {len(experiments_to_run)} experiments")
+        print(f"Running {len(experiments_to_run)} experiments on Assault")
         print(f"Environment: {args.env}")
-        print(f"Timesteps per experiment: {args.timesteps:,}")
+        print(f"Timesteps: {args.timesteps:,}")
         print(f"{'='*80}\n")
         
         # Run experiments
@@ -254,7 +253,7 @@ if __name__ == "__main__":
         with open('experiment_results.json', 'w') as f:
             json.dump(results, f, indent=2)
         
-        # Print summary
+        # Summary
         print(f"\n{'='*80}")
         print("EXPERIMENT SUMMARY")
         print(f"{'='*80}")
